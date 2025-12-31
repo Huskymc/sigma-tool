@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<title>DorszHub // Dark Console</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+:root{
+  --bg:#020617;
+  --panel:#020617;
+  --green:#22c55e;
+  --green-d:#16a34a;
+  --text:#e5e7eb;
+  --muted:#94a3b8;
+  --border:#052e16;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:radial-gradient(1200px 600px at 50% -10%, #022c22, var(--bg));
+  color:var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+header{
+  padding:18px 22px;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+header .title{
+  color:var(--green);
+  letter-spacing:.08em;
+}
+header .badge{
+  color:#022c22; background:var(--green);
+  padding:4px 8px; border-radius:6px; font-weight:700;
+}
+.wrap{
+  max-width:1100px; margin:24px auto; padding:0 16px;
+  display:grid; grid-template-columns:1fr 1fr; gap:16px;
+}
+.panel{
+  background:linear-gradient(180deg, #020617, #01030a);
+  border:1px solid var(--border);
+  border-radius:14px;
+  box-shadow:0 0 0 1px rgba(34,197,94,.15), 0 20px 40px rgba(0,0,0,.6);
+  padding:16px;
+  position:relative;
+  overflow:hidden;
+}
+.panel::after{
+  content:""; position:absolute; inset:auto -40% -60% -40%;
+  height:120%; background:linear-gradient(transparent, rgba(34,197,94,.06), transparent);
+  transform:rotate(8deg);
+}
+h2{
+  margin:0 0 12px; color:var(--green);
+}
+p.small{color:var(--muted); font-size:12px}
+input{
+  width:100%; padding:10px 12px; border-radius:10px;
+  background:#020617; color:var(--text);
+  border:1px solid var(--border);
+  outline:none; margin-bottom: 8px;
+}
+input:focus{border-color:var(--green)}
+button{
+  width:100%;
+  padding:10px 14px; border-radius:10px;
+  background:linear-gradient(180deg, var(--green), var(--green-d));
+  color:#022c22; font-weight:900; letter-spacing:.04em;
+  border:none; cursor:pointer;
+}
+button:hover{filter:brightness(1.05)}
+.output{
+  margin-top:10px; padding:12px;
+  background:#01030a; border:1px dashed var(--border);
+  border-radius:10px; min-height:48px; white-space:pre-wrap;
+  word-break: break-all;
+}
+.warn{color:#f87171; font-size:12px; margin-top:8px}
+.success{color:var(--green); font-size:12px; margin-top:8px}
+.footer{
+  max-width:1100px; margin:12px auto 28px; padding:0 16px;
+  color:#64748b; font-size:12px; text-align:center;
+}
+@media (max-width:900px){
+  .wrap{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title">DORSZHUB // DARK CONSOLE</div>
+  <div class="badge">LIVE</div>
+</header>
+
+<div class="wrap">
+
+  <!-- FAKE PSC DEMO -->
+  <section class="panel">
+    <h2>PSC Code Generator</h2>
+    <p class="small">Generuje losowe kody w formacie PSC</p>
+    <button onclick="genPSC()">GENERATE</button>
+    <div class="output" id="pscOut">—</div>
+    <div class="success">✓ Działa - generuje losowe kody</div>
+  </section>
+
+  <!-- IP INFO DEMO -->
+  <section class="panel">
+    <h2>IP Intelligence</h2>
+    <p class="small">Wpisz IP aby zobaczyć publiczne informacje</p>
+    <input id="ip" placeholder="np. 8.8.8.8" />
+    <button onclick="ipLookup()">LOOKUP</button>
+    <div class="output" id="ipOut">—</div>
+    <div id="ipStatus"></div>
+  </section>
+
+</div>
+
+<div class="footer">
+  DorszHub • Dark UI • HTML only • Fully Functional
+</div>
+
+<script>
+function genPSC(){
+  const part=()=>Math.floor(1000+Math.random()*9000);
+  const code = `${part()}-${part()}-${part()}-${part()}`;
+  document.getElementById('pscOut').textContent = code;
+  console.log('Wygenerowano:', code);
+}
+
+async function ipLookup(){
+  const ip=document.getElementById('ip').value.trim();
+  const out=document.getElementById('ipOut');
+  const status=document.getElementById('ipStatus');
+  
+  if(!ip){ 
+    out.textContent="Błąd: Podaj IP"; 
+    status.innerHTML='<div class="warn">⚠️ Pole nie może być puste</div>';
+    return; 
+  }
+  
+  out.textContent="⏳ Pobieranie danych...";
+  status.innerHTML='';
+  
+  try{
+    const r=await fetch(`https://ipapi.co/${ip}/json/`);
+    
+    if(!r.ok) throw new Error('IP nie znalezione');
+    
+    const d=await r.json();
+    
+    out.textContent =
+`IP: ${d.ip || ip}
+Kraj: ${d.country_name || "-"}
+Miasto: ${d.city || "-"}
+Region: ${d.region || "-"}
+ISP: ${d.org || "-"}
+Czasowa strefa: ${d.timezone || "-"}`;
+    
+    status.innerHTML='<div class="success">✓ Dane pobrane pomyślnie</div>';
+    
+  }catch(e){
+    out.textContent="❌ Błąd pobierania danych";
+    status.innerHTML=`<div class="warn">⚠️ ${e.message}</div>`;
+    console.error('Błąd:', e);
+  }
+}
+
+// Umożliwia enterem
+document.getElementById('ip').addEventListener('keypress', function(e){
+  if(e.key === 'Enter') ipLookup();
+});
+</script>
+</body>
+</html>
