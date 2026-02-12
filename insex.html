@@ -1,249 +1,88 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-<meta charset="UTF-8" />
-<title>DorszHub // Dark Console</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<style>
-:root{
-  --bg:#020617;
-  --panel:#01030a;
-  --green:#22c55e;
-  --green-d:#16a34a;
-  --text:#e5e7eb;
-  --muted:#94a3b8;
-  --border:#052e16;
-  --danger:#f87171;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;
-  background:radial-gradient(1200px 600px at 50% -10%, #022c22, var(--bg));
-  color:var(--text);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-  min-height:100vh;
-}
-header{
-  padding:18px 22px;
-  border-bottom:1px solid var(--border);
-  display:flex; align-items:center; justify-content:space-between;
-}
-header .title{
-  color:var(--green);
-  letter-spacing:.08em;
-  font-weight:700;
-}
-header .badge{
-  color:#022c22; background:var(--green);
-  padding:4px 8px; border-radius:6px; font-weight:700;
-  font-size:0.85rem;
-}
-.wrap{
-  max-width:1100px; margin:24px auto; padding:0 16px;
-  display:grid; grid-template-columns:1fr 1fr; gap:16px;
-}
-.panel{
-  background:linear-gradient(180deg, var(--panel), #01030a);
-  border:1px solid var(--border);
-  border-radius:14px;
-  box-shadow:0 0 0 1px rgba(34,197,94,.15), 0 20px 40px rgba(0,0,0,.6);
-  padding:16px;
-  position:relative;
-  overflow:hidden;
-}
-.panel::after{
-  content:""; position:absolute; inset:auto -40% -60% -40%;
-  height:120%; background:linear-gradient(transparent, rgba(34,197,94,.06), transparent);
-  transform:rotate(8deg);
-}
-h2{
-  margin:0 0 12px; color:var(--green);
-}
-p.small{color:var(--muted); font-size:12px; line-height:1.4}
-input{
-  width:100%; padding:10px 12px; border-radius:10px;
-  background:var(--panel); color:var(--text);
-  border:1px solid var(--border);
-  outline:none;
-  font-family:inherit;
-}
-input:focus{border-color:var(--green)}
-button{
-  margin-top:10px;
-  padding:10px 14px; 
-  border-radius:10px;
-  background:linear-gradient(180deg, var(--green), var(--green-d));
-  color:#022c22; 
-  font-weight:900; 
-  letter-spacing:.04em;
-  border:none; 
-  cursor:pointer;
-  transition:transform .15s, filter .15s;
-}
-button:hover{ 
-  filter:brightness(1.05);
-  transform:translateY(-1px);
-}
-button:active{transform:translateY(0);}
+// this only generates chess.com accounts and not nitro codes.
+// for nitro code generator, contact me on discord @uutu or on telegram @tahagorme
 
-.output{
-  margin-top:10px; 
-  padding:12px;
-  background:#01030a; 
-  border:1px dashed var(--border);
-  border-radius:10px; 
-  min-height:48px; 
-  white-space:pre-wrap;
-  font-family:inherit;
-  font-size:.9rem;
+const { connect } = require("puppeteer-real-browser")
+const fs = require('fs');
+const prompt = require("prompt-sync")({ sigint: true });
+
+async function test() {
+
+    const { browser, page } = await connect({
+
+        headless: false,
+
+        args: [],
+
+        customConfig: {},
+
+        turnstile: true,
+
+        connectOption: {},
+
+        disableXvfb: false,
+        ignoreAllFlags: false
+        // proxy:{
+        //     host:'<proxy-host>',
+        //     port:'<proxy-port>',
+        //     username:'<proxy-username>',
+        //     password:'<proxy-password>'
+        // }
+
+    })
+
+    let randomEmail = randomString(15) + '@outlook.com';
+    let randomUsername = randomString(15);
+    let randomPassword = randomString(15) + randomIntFromInterval(100000, 9999999);
+    console.log(randomEmail)
+    await page.goto('https://www.chess.com/register')
+    await page.waitForSelector("body > div:nth-child(1) > div > div.security-onboarding-container > main > div > div > button")
+    await page.click("body > div:nth-child(1) > div > div.security-onboarding-container > main > div > div > button")
+    await page.waitForSelector("body > div:nth-child(1) > div > div.security-onboarding-container > main > div > form > div:nth-child(1) > button")
+    await page.click("body > div:nth-child(1) > div > div.security-onboarding-container > main > div > form > div:nth-child(1) > button")
+
+    await page.waitForSelector("#registration_email")
+    await page.type("#registration_email", randomEmail)
+
+    await page.waitForSelector("#registration_password")
+    await page.type("#registration_password", randomPassword)
+    await page.waitForSelector("body > div:nth-child(1) > div > div.security-onboarding-container > main > div > form > div:nth-child(6) > button")
+    await page.click("body > div:nth-child(1) > div > div.security-onboarding-container > main > div > form > div:nth-child(6) > button")
+    await page.waitForSelector("#registration_username")
+    await new Promise(r => setTimeout(r, 500))
+
+    await page.type("#registration_username", randomUsername)
+    await page.waitForSelector("body > div:nth-child(1) > div > div.security-onboarding-container > main > div > form > div:nth-child(7) > div > div.username-wrap > button")
+    await new Promise(r => setTimeout(r, 500))
+
+    await page.click("body > div:nth-child(1) > div > div.security-onboarding-container > main > div > form > div:nth-child(7) > div > div.username-wrap > button")
+    await page.waitForNavigation();
+    console.log(`Account Created --> ${randomEmail} : ${randomPassword}`)
+
+    //save cookies to file
+    await new Promise(r => setTimeout(r, 1000))
+    test();
+
+
+
+
+}
+let noOfThreads = prompt('Enter number of threads: ');
+for (let i = 0; i < noOfThreads; i++) {
+    test();
 }
 
-.warn{
-  color:var(--danger); 
-  font-size:12px; 
-  margin-top:8px;
+
+function randomIntFromInterval(min, max) { // min and max included
+    return Math.floor(Math.random() * (max - min + 1) + min)
 }
 
-.copy-btn{
-  margin-top:6px !important;
-  background:#0f172a !important;
-  color:var(--green);
-  font-size:.8rem;
-  padding:6px 10px !important;
+function randomString(length) {
+    var result = ''
+    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    var charactersLength = characters.length
+    for (var i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength))
+    }
+    return result
 }
 
-.footer{
-  max-width:1100px; 
-  margin:12px auto 28px; 
-  padding:0 16px;
-  color:#64748b; 
-  font-size:12px; 
-  text-align:center;
-}
-
-.sr-only {
-  position:absolute;
-  width:1px;height:1px;
-  padding:0;margin:-1px;
-  overflow:hidden;
-  clip:rect(0,0,0,0);
-  border:0;
-}
-
-@media (max-width:900px){
-  .wrap{grid-template-columns:1fr}
-}
-</style>
-</head>
-<body>
-
-<header>
-  <div class="title">DORSZHUB // DARK CONSOLE</div>
-  <div class="badge">DEMO</div>
-</header>
-
-<div class="wrap">
-
-  <!-- ⭐️ PSC GENERATOR ⭐️ -->
-  <section class="panel">
-    <h2>Generator PSC</h2>
-    <p class="small">Demo wizualne. Generuje **losowe, nieważne** kody PSC — tylko do prezentacji.</p>
-    
-    <button onclick="genPSC()" type="button">GENERUJ</button>
-    <div class="output" id="pscOut" aria-live="polite">—</div>
-    <button class="copy-btn" onclick="copyPSC()" type="button" id="copyPscBtn" disabled>KOPIUJ</button>
-    <div class="warn">⚠️ Wygenerowane kody **NIE SĄ WAŻNE**!</div>
-  </section>
-
-  <!-- ⭐️ IP LOOKUP ⭐️ -->
-  <section class="panel">
-    <h2>Informacje IP</h2>
-    <p class="small">Pokazuje publiczne dane adresu IP. **Nie skanuje, nie atakuje!**</p>
-    
-    <label for="ip" class="sr-only">Adres IP</label>
-    <input id="ip" placeholder="np. 8.8.8.8" />
-    <button onclick="ipLookup()" type="button">SPRAWDŹ</button>
-    <div class="output" id="ipOut" aria-live="polite">—</div>
-  </section>
-
-</div>
-
-<div class="footer">
-  DorszHub • Dark UI • HTML + CSS + JS • Gotowy do wdrożenia na GitHub Pages
-</div>
-
-<script>
-/* ---------- PSC GENERATOR ---------- */
-function genPSC(){
-  const part = () => Math.floor(1000 + Math.random()*9000);
-  const psc = `${part()}-${part()}-${part()}-${part()}`;
-  document.getElementById('pscOut').textContent = psc;
-  document.getElementById('copyPscBtn').disabled = false;
-}
-
-function copyPSC(){
-  const text = document.getElementById('pscOut').textContent;
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = document.getElementById('copyPscBtn');
-    btn.textContent = "✅ SKOPIOWANO!";
-    setTimeout(()=> btn.textContent = "KOPIUJ", 2000);
-  }).catch(err => {
-    alert('Nie udało się skopiować. Spróbuj wybrać tekst ręcznie.');
-  });
-}
-
-/* ---------- IP LOOKUP ---------- */
-function isValidIP(ip){
-  const regex = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
-  if(!regex.test(ip)) return false;
-  return ip.split('.').every(o => {
-    const n = parseInt(o,10);
-    return n >= 0 && n <= 255;
-  });
-}
-
-async function ipLookup(){
-  const ipInput = document.getElementById('ip');
-  const ip = ipInput.value.trim();
-  const out = document.getElementById('ipOut');
-  
-  // Reset wyniku
-  out.textContent = "";
-  
-  if(!ip){ 
-    out.textContent = "⚠️ Podaj adres IP."; 
-    ipInput.focus();
-    return; 
-  }
-  
-  if(!isValidIP(ip)){
-    out.textContent = "⚠️ Nieprawidłowy format IP. Przykład: 8.8.8.8";
-    ipInput.select();
-    return;
-  }
-
-  out.textContent = "🔍 Pobieranie danych…";
-  
-  try{
-    // ✅ UŻYJEMY BEZPŁATNEGO API (ipapi.co) — DZIAŁA NA SERWERZE!
-    const response = await fetch(`https://ipapi.co/${ip}/json/`);
-    
-    if(!response.ok) throw new Error(`Błąd API: ${response.status}`);
-    
-    const data = await response.json();
-    
-    out.textContent = 
-`IP:            ${data.ip || ip}
-Kraj:          ${data.country_name || "—"}
-Miasto:        ${data.city || "—"}
-Region:        ${data.region || "—"}
-Dostawca (ISP):${data.org || "—"}
-Strefa czasowa:${data.timezone || "—"}`;
-  }catch(error){
-    console.error("Błąd:", error);
-    out.textContent = `❌ BŁĄD: ${error.message || "Nie udało się pobrać danych. Sprawdź połączenie internetowe."}`;
-  }
-}
-</script>
-</body>
-</html>
